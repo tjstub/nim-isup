@@ -6,6 +6,7 @@
 ]#
 
 import httpclient
+import strutils
 import os
 import parseopt
 import json
@@ -20,28 +21,44 @@ proc checkIsUp(http: HttpClient, url: string) =
   else:
     echo(url, " is invalid.")
 
-# httpclient doesn't handle proxying. This proxying
-# assumes then that you're keeping the proxy-info somewhere
-# in a unix environment variable.
-proc getProxy(): httpclient.Proxy =
-  var url = ""
-  if existsEnv("https_proxy"):
-    url = getEnv("https_proxy")
+# httpclient doesn't handle proxying. It also
+# doesn't like empty proxy settings and the 
+# documentation is a bit lax. So we'll intpret
+# no settings as meaning there is no proxy needed.
+proc getProxySettings(): string =
+  let proxy_settings = if existsEnv("https_proxy"):
+    getEnv("https_proxy")
   elif existsEnv("HTTPS_PROXY"):
-    url = getEnv("HTTPS_PROXY")
+     getEnv("HTTPS_PROXY")
   elif existsEnv("http_proxy"):
-    url = getEnv("http_proxy")
+    getEnv("http_proxy")
   elif existsEnv("HTTP_PROXY"):
-    url = getEnv("HTTP_PROXY")
+    getEnv("HTTP_PROXY")
+  else:
+    ""
+  
+  return proxy_settings
 
-  return newProxy(url=url)
+# Creates a new httpclient, with proxy settings
+# if need be.
+proc getHttpClient(): HttpClient =
+  let proxy_settings = getProxySettings()
+
+  if proxy_settings.isEmptyOrWhitespace():
+    return newHttpClient()
+  else:
+    return newHttpClient(proxy=newProxy(url=proxy_settings))
 
 proc print_help() =
-  echo("is-up - a quick 'is it up' website checker using isitup.org API.\n")
+  echo("isup - a quick 'is it up' website checker using isitup.org API.\n")
   echo("example: is-up www.google.com www.facebook.com")
   echo("Options:")
   echo("-h, --help: Print this message and exit")
+  echo("-v, --version: Print version and exit")
   echo("<argument>: Up to N number of domains checked, in order.")
+
+proc print_version() =
+  echo("isup version 1.0.1, GPLv3 Copyright 2020")
 
 when isMainModule:
   if os.paramCount() < 1:
@@ -49,13 +66,16 @@ when isMainModule:
     print_help()
     system.quit(QuitFailure)
 
-  var client = newHttpClient(proxy=getProxy())
+  var client = getHttpClient()
   var emptyNoVal = initOptParser()
   for kind, key, val in emptyNoVal.getopt():
     case kind:
     of cmdShortOption, cmdLongOption:
       if key == "help" or key == "h":
         print_help()
+        system.quit(QuitSuccess)
+      elif key == "version" or key == "v":
+        print_version()
         system.quit(QuitSuccess)
       else:
         stderr.writeLine("Unknown option: " & key)

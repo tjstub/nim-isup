@@ -19,10 +19,16 @@ You will need to have an SSL library installed. This tool assumes you're on a un
 
 ## Examples
 
-### list help:
+### List help:
 
 ```sh
 $ isup --help
+```
+
+### List version
+
+```sh
+$ isup --version
 ```
 
 ### Query site status

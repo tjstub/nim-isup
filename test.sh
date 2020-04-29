@@ -30,8 +30,33 @@ if ! isup www.google.com amazon.com; then
 fi
 
 
-isup --help
-isup -h
+if ! isup --help; then
+    echo "longhand Help should be supported!"
+    echo "Failed!"
+    exit 1
+
+fi
+
+if ! isup -h; then
+    echo "shorthand Help should be supported!"
+    echo "Failed!"
+    exit 1
+
+fi
+
+
+if ! isup --version; then
+    echo "longhand version should be supported!"
+    echo "Failed!"
+    exit 1
+
+fi
+
+if ! isup -v; then
+    echo "shorthand version should be supported!"
+    echo "Failed!"
+    exit 1
+fi
 
 
 if isup --unknownflag; then

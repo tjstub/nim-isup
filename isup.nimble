@@ -1,6 +1,6 @@
 # Package
 
-version       = "1.0.0"
+version       = "1.0.1"
 author        = "Tyler Stubenvoll"
 description   = "A commandline tool for checking if a domain is up."
 license       = "GPL-3.0"
